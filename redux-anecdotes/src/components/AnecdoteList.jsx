@@ -1,7 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { voteAnecdote } from '../reducers/anecdoteReducer';
-import { setNotification,removeNotification } from '../reducers/notificationReducer';
-import anecdoteService from '../services/anecdotes';  
+import { setNotificationWithTimeout } from '../reducers/notificationReducer';
 
 const AnecdoteList = () => {
   const dispatch = useDispatch();
@@ -12,25 +11,20 @@ const AnecdoteList = () => {
     //   .sort((a, b) => b.votes - a.votes) // Sort the anecdotes based on the number of votes
     return anecdotes
       .filter((anecdote) => 
-        anecdote.content && filter ? 
+        anecdote.content && filter ? //if the filter is not empty then filter the anecdotes based on the filter otherwise return all the anecdotes
         anecdote.content.toLowerCase().includes(filter.toLowerCase()) : 
         true
       )
       .sort((a, b) => b.votes - a.votes);
 });
 
-  const vote = async (id) => {
-    const anectodeToVote = anecdotes.find((anecdote) => anecdote.id === id);
-    const updatedAnecdote = { ...anectodeToVote, votes: anectodeToVote.votes + 1 };
-    await anecdoteService.updateVote(id,updatedAnecdote);//update the votes in the server
-    
-    dispatch(voteAnecdote(updatedAnecdote));//update the votes in the store
+  // vote function called with the anecdote object as the argument when button is clicked
+  const vote = async (anecdote) => {
+    await dispatch(voteAnecdote(anecdote));
 
-    dispatch(setNotification(`You voted '${anectodeToVote.content}'`));
-    setTimeout(() => {
-      dispatch(removeNotification());
-    }, 5000); // Remove the notification after 5 seconds
+    dispatch(setNotificationWithTimeout(`You voted '${anecdote.content}'`, 5));
   };
+
 
   return (
     <div>
@@ -38,8 +32,9 @@ const AnecdoteList = () => {
         <div key={anecdote.id}>
           <div>{anecdote.content}</div>
           <div>
-            has : {anecdote.votes} <button onClick={() => vote(anecdote.id)}>vote</button>
-          </div>
+            has : {anecdote.votes} <button onClick={() => vote(anecdote)}>vote</button>
+{/* // vote function called with the anecdote object as the argument when button is clicked
+ */}          </div>
         </div>
       ))}
     </div>
